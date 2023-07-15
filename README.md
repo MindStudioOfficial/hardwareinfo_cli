@@ -1,6 +1,9 @@
 # *WIP* Hardware Information as a beautiful CLI
 
-written in dart
+| OS      | Implemented |
+| ------- | ----------- |
+| Windows | ✔ (WIP)     |
+| Linux   | ❌           |
 
 ```
 ╭Motherboard──────────────────────────────────────────────────────────╮
@@ -27,4 +30,10 @@ written in dart
 │                                            │ z │ │ z │ │ z │ │ z │  │
 │                                            ╰───╯ ╰───╯ ╰───╯ ╰───╯  │
 ╰─────────────────────────────────────────────────────────────────────╯
+```
+
+## Debugging
+
+```
+dart run
 ```
