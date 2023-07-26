@@ -5,11 +5,12 @@ import 'package:hardwareinfo_cli/hardware/cpu.dart';
 import 'package:hardwareinfo_cli/hardware/drive.dart';
 import 'package:hardwareinfo_cli/hardware/mb.dart';
 import 'package:hardwareinfo_cli/hardware/mem.dart';
+import 'package:test/expect.dart';
 
 void main(List<String> arguments) async {
   CPUInfo cpu = await CPUInfo.fetch();
-  MotherboardInfo mb = await MotherboardInfo.fetch();
-  List<MemoryModule> mems = await MemoryModule.fetchAll();
+  MotherboardInfo? mb = await MotherboardInfo.fetch();
+  List<MemorySlot> mems = await MemorySlot.fetchAll();
   List<DriveInfo> drives = await DriveInfo.fetchAll();
 
   final console = Console();
@@ -27,16 +28,18 @@ void main(List<String> arguments) async {
     // * status
     renderer.renderText(1, 0, status(), color: CustomConsoleColor(ConsoleColor.blue, ConsoleColor.black));
     // * MB
-    renderer.renderTextBox(
-      "${mb.manufacturer} ${mb.product}",
-      0,
-      1,
-      expandRect: true,
-      title: "Motherboard",
-      titleColor: ConsoleColor.green.asForeground,
-      borderColor: ConsoleColor.green.asForeground,
-      fillColor: ConsoleColor.cyan.asForeground,
-    );
+    if (mb != null) {
+      renderer.renderTextBox(
+        "${mb.manufacturer} ${mb.product}",
+        0,
+        1,
+        expandRect: true,
+        title: "Motherboard",
+        titleColor: ConsoleColor.green.asForeground,
+        borderColor: ConsoleColor.green.asForeground,
+        fillColor: ConsoleColor.cyan.asForeground,
+      );
+    }
     // * CPU
     var cpuBox = renderer.renderTextBox(
       cpu.toString(),
@@ -50,8 +53,10 @@ void main(List<String> arguments) async {
     // * MEM
     int memX = renderer.width - 8;
     for (var mem in mems.reversed) {
+      String memText = "${mem.deviceLocator}\n\n${mem.capacity ~/ (1024 * 1024 * 1024)}GB\n\n${mem.speed}MHz";
+      memText = mem.empty ? "|" * memText.length : memText;
       renderer.renderTextBox(
-        "${mem.deviceLocator}\n\n${mem.capacity ~/ (1024 * 1024 * 1024)}GB\n\n${mem.speed}MHz",
+        memText,
         memX,
         4,
         maxWidth: 1,
@@ -96,7 +101,7 @@ void main(List<String> arguments) async {
   renderer.dispose();
 }
 
-void printMotherboardLayout(CPUInfo cpu, List<MemoryModule> memoryModules) {
+void printMotherboardLayout(CPUInfo cpu, List<MemorySlot> memoryModules) {
   final console = Console();
   final width = console.windowWidth;
   final boxWidth = (width - 12) ~/ 2;

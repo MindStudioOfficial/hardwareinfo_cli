@@ -13,7 +13,17 @@ class MotherboardInfo {
     required this.version,
   });
 
-  static Future<MotherboardInfo> fetch() async {
+  static Future<MotherboardInfo?> fetch() async {
+    if (Platform.isWindows) {
+      return fetchWindows();
+    } else if (Platform.isLinux) {
+      return null;
+    } else {
+      throw UnsupportedError('Unsupported platform');
+    }
+  }
+
+  static Future<MotherboardInfo> fetchWindows() async {
     var mbInfoCmd = 'wmic baseboard get Manufacturer,Product,SerialNumber,Version /FORMAT:LIST';
     var mbInfoProcessResult = await Process.run('cmd', ['/c', mbInfoCmd]);
     if (mbInfoProcessResult.exitCode != 0) {

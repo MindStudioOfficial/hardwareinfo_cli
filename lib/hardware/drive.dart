@@ -20,6 +20,16 @@ class DriveInfo {
   });
 
   static Future<List<DriveInfo>> fetchAll() async {
+    if (Platform.isWindows) {
+      return fetchAllWindows();
+    } else if (Platform.isLinux) {
+      return [];
+    } else {
+      throw UnsupportedError('Unsupported platform');
+    }
+  }
+
+  static Future<List<DriveInfo>> fetchAllWindows() async {
     var driveInfoCmd = 'wmic diskdrive get DeviceID,Size,Model,Partitions,MediaType,SerialNumber,Status /FORMAT:LIST';
     var driveInfoProcessResult = await Process.run('cmd', ['/c', driveInfoCmd]);
     if (driveInfoProcessResult.exitCode != 0) {
