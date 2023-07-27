@@ -194,6 +194,7 @@ class ConsoleRenderer {
     int x,
     int y, {
     int? maxWidth,
+    int? maxHeight,
     String? title,
     bool expandRect = false,
     CustomConsoleColor? borderColor,
@@ -205,6 +206,7 @@ class ConsoleRenderer {
         x,
         y,
         maxWidth: maxWidth,
+        maxHeight: maxHeight,
         expandRect: expandRect,
         title: title != null ? ColoredString(title, color: titleColor) : null,
         borderColor: borderColor,
@@ -215,6 +217,7 @@ class ConsoleRenderer {
     int x,
     int y, {
     int? maxWidth,
+    int? maxHeight,
     ColoredString? title,
     bool expandRect = false,
     CustomConsoleColor? borderColor,
@@ -236,8 +239,8 @@ class ConsoleRenderer {
     var (int rWidth, int rHeight) = renderRect(
       x,
       y,
-      expandRect ? _width : tWidth + 4,
-      expandRect ? _height : lineCount + 2,
+      expandRect ? maxWidth ?? _width : tWidth + 4,
+      expandRect ? maxHeight ?? _height : lineCount + 2,
       borderColor: borderColor,
       fillColor: text.color,
     );

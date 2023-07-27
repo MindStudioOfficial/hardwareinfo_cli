@@ -86,8 +86,6 @@ class MemorySlot {
       var speedStr = memInfoMap['Speed']!;
       var locator = memInfoMap['Locator']!;
 
-      print(capacityStr);
-
       var capacity = capacityStr.contains('MB')
           ? (int.tryParse(capacityStr.split(' ')[0]) ?? 0) * 1024 * 1024
           : (int.tryParse(capacityStr.split(' ')[0]) ?? 0) * 1024 * 1024 * 1024;
@@ -107,11 +105,14 @@ class MemorySlot {
 
   @override
   String toString() {
-    return '''
+    if (empty) {
+      return 'Device Locator: $deviceLocator\nEmpty slot';
+    } else {
+      return '''
 Device Locator: $deviceLocator
 Capacity: ${capacity ~/ (1024 * 1024 * 1024)} GB
 Speed: $speed MHz
-Empty? $empty
 ''';
+    }
   }
 }

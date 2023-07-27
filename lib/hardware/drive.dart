@@ -1,5 +1,7 @@
 import 'dart:io';
 
+import 'package:hardwareinfo_cli/utility/logging.dart';
+
 class DriveInfo {
   final String id;
   final int size; // in bytes
@@ -23,7 +25,7 @@ class DriveInfo {
     if (Platform.isWindows) {
       return fetchAllWindows();
     } else if (Platform.isLinux) {
-      return [];
+      return fetchAllLinux();
     } else {
       throw UnsupportedError('Unsupported platform');
     }
@@ -69,6 +71,93 @@ class DriveInfo {
     }
 
     return drives;
+  }
+
+  static Future<List<DriveInfo>> fetchAllLinux() async {
+    var driveListResult = await Process.run('lsblk', ['-dpn', '-o', 'name,size']);
+    if (driveListResult.exitCode != 0) {
+      throw Exception('Failed to get Drive List. Error: ${driveListResult.stderr}');
+    }
+
+    var drives = <DriveInfo>[];
+    var lines = driveListResult.stdout.toString().split('\n');
+    for (var line in lines) {
+      if (line.trim().isEmpty) {
+        continue;
+      }
+
+      var parts = line.split(' ');
+      var id = parts.first.trim();
+      var sizeStr = parts.last.trim();
+      var size = _parseHumanReadableSizeToBytes(sizeStr);
+
+      // Initialize optional fields as null
+      String? model;
+      String? serialNumber;
+      String? mediaType;
+      try {
+        String? extractValueFromHdparmOutput(String field, String output) {
+          var lines = output.split('\n');
+          for (var line in lines) {
+            if (line.contains(field)) {
+              return line.split(':').last.trim();
+            }
+          }
+          return null;
+        }
+
+        // Try to get other drive info from hdparm
+        var infoCmd = 'hdparm';
+        var infoCmdArgs = ['-I', id];
+        var infoProcessResult = await Process.run(infoCmd, infoCmdArgs);
+        if (infoProcessResult.exitCode != 0) {
+          throw Exception('Failed to get Drive Info. Error: ${infoProcessResult.stderr}');
+        }
+        var output = infoProcessResult.stdout.toString();
+        model = extractValueFromHdparmOutput('Model Number:', output);
+        serialNumber = extractValueFromHdparmOutput('Serial Number:', output);
+        mediaType = extractValueFromHdparmOutput('Transport:', output);
+      } catch (e) {
+        logger.log(
+          "hdparm is likely not installed. Drive information might be incomplete.",
+          level: LogLevel.warning,
+        );
+      }
+      if (model == null) {
+        logger.log(
+          "couldn't fetch model name for drive $id",
+          level: LogLevel.warning,
+        );
+      }
+
+      drives.add(DriveInfo(
+        id: id,
+        size: size,
+        model: model,
+        partitions: 0,
+        mediaType: mediaType,
+        serialNumber: serialNumber,
+        status: null,
+      ));
+    }
+
+    return drives;
+  }
+
+  // Parses a size string (like "10G", "100M", "1000K", "1024") to its size in bytes
+  static int _parseHumanReadableSizeToBytes(String size) {
+    var scale = 1;
+    if (size.endsWith('T')) {
+      scale = 1024 * 1024 * 1024 * 1024; // for Terabytes
+    } else if (size.endsWith('G')) {
+      scale = 1024 * 1024 * 1024; // for Gigabytes
+    } else if (size.endsWith('M')) {
+      scale = 1024 * 1024; // for Megabytes
+    } else if (size.endsWith('K')) {
+      scale = 1024; // for Kilobytes
+    }
+    // Replace commas with dots to handle the decimal point and remove the scale character, then convert to a double and multiply by the scale
+    return (double.parse(size.replaceAll(',', '.').replaceAll(RegExp(r'[TGMK]'), '')) * scale).round();
   }
 
   @override
