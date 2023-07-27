@@ -22,7 +22,7 @@ void main(List<String> arguments) async {
   Key? lastKey;
 
   String status() =>
-      "pressed: ${lastKey != null ? (lastKey.isControl ? lastKey.controlChar.name : lastKey.char) : 'none'}";
+      "pressed: ${lastKey != null ? (lastKey.isControl ? lastKey.controlChar.name : lastKey.char) : 'none'}, press 'q' to exit";
 
   void createOutput(ConsoleRenderer renderer) {
     renderer.clear();
@@ -56,16 +56,17 @@ void main(List<String> arguments) async {
     int memX = renderer.width - 8;
     for (var mem in mems.reversed) {
       String memText = "${mem.deviceLocator}\n\n${mem.capacity ~/ (1024 * 1024 * 1024)}GB\n\n${mem.speed}MHz";
-      memText = mem.empty ? "|" * (memText.length + 1) : memText;
+      memText = mem.empty ? "│" * (memText.length + 1) : memText;
       renderer.renderTextBox(
         memText,
         memX,
         4,
         maxWidth: 1,
         title: "MEM",
-        borderColor: ConsoleColor.blue.asForeground,
+        borderColor: ConsoleColor.yellow.asForeground,
+        fillColor: mem.empty ? ConsoleColor.brightBlack.asForeground : ConsoleColor.white.asForeground,
       );
-      memX -= 6;
+      memX -= 5;
     }
     // * Drives
     int driveY = cpuBox.$2 + 4 + 2;
@@ -76,7 +77,8 @@ void main(List<String> arguments) async {
         driveY,
         title: "DRIVE",
         maxWidth: renderer.width ~/ 2,
-        borderColor: ConsoleColor.blue.asForeground,
+        borderColor: ConsoleColor.red.asForeground,
+        fillColor: ConsoleColor.white.asForeground,
       );
       driveY += h + 1;
     }
@@ -102,6 +104,7 @@ void main(List<String> arguments) async {
     createOutput(renderer);
     if (key.controlChar == ControlCharacter.ctrlC || key.char.compareTo("q") == 0) {
       running = false;
+      console.clearScreen();
     }
   }
   renderer.dispose();
