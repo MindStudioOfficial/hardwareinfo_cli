@@ -1,5 +1,8 @@
 # *WIP* Hardware Information as a beautiful CLI
 
+![grafik](https://github.com/MindStudioOfficial/hardwareinfo_cli/assets/62838401/d7c0c919-9de1-49b2-9e85-e65ad021e3ca)
+
+
 | OS      | Implemented |
 | ------- | ----------- |
 | Windows | ✔ (WIP)     |
